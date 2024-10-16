@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/public/css/index.css"/>
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    <title>Welcome!</title>
+</head>
+<body>
+    <h1>Welcome!</h1>
+    <p>This probably ins't where you want to be. Enjoy the meme while your here!</p>
+    <p>You'll be redirected to <a href="https://memcached.org">https://memcached.org</a> in <span id="time">5</span>...</p>
+    <img src="{{.Meme}}" alt="Programming Meme"/>
+
+
+    <script>
+        let element = document.getElementById("time")
+
+        setTimeout(() => {
+            window.location = "https://memcached.org"
+        },5000)
+
+        setInterval(() => {
+            let current = parseInt(element.innerText)
+            if (current === 0){
+                return
+            }
+            element.innerText = current - 1
+
+        },1000)
+
+    </script>
+</body>
+</html>
