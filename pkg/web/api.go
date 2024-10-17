@@ -3,10 +3,13 @@ package web
 import (
 	"context"
 	"fmt"
+	"html/template"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -28,6 +31,14 @@ func NewServer(address string) (*server, error) {
 	h.Use(gin.Recovery())
 
 	h.Static("/public", path.Join(cwd, "pkg", "public"))
+	t, err := loadTemplate()
+
+	if err != nil {
+		return nil, err
+	}
+
+	h.SetHTMLTemplate(t)
+
 	h.LoadHTMLGlob(path.Join(cwd, "pkg", "templates", "*.html"))
 	h.GET("/", index)
 
@@ -38,6 +49,26 @@ func NewServer(address string) (*server, error) {
 			ReadHeaderTimeout: time.Second * 30,
 		},
 	}, nil
+}
+
+// loadTemplate loads templates embedded by go-assets-builder
+func loadTemplate() (*template.Template, error) {
+	t := template.New("")
+	for name, file := range Assets.Files {
+		if file.IsDir() || !strings.HasSuffix(name, ".html") {
+			continue
+		}
+		h, err := io.ReadAll(file)
+		if err != nil {
+			return nil, err
+		}
+		splitName := strings.Split(name, "/")
+		t, err = t.New(splitName[len(splitName)-1]).Parse(string(h))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return t, nil
 }
 
 func (s *server) Start() {
