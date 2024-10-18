@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path"
 	"strings"
 	"time"
 
@@ -21,16 +20,11 @@ type server struct {
 }
 
 func NewServer(address string) (*server, error) {
-	cwd, err := os.Getwd()
-
-	if err != nil {
-		return nil, err
-	}
-
 	h := gin.New()
 	h.Use(gin.Recovery())
 
-	h.Static("/public", path.Join(cwd, "pkg", "public"))
+	h.StaticFS("/public", PublicAssets)
+
 	t, err := loadTemplate()
 
 	if err != nil {
@@ -39,7 +33,6 @@ func NewServer(address string) (*server, error) {
 
 	h.SetHTMLTemplate(t)
 
-	h.LoadHTMLGlob(path.Join(cwd, "pkg", "templates", "*.html"))
 	h.GET("/", index)
 
 	return &server{
