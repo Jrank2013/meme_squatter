@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -64,7 +65,7 @@ func loadTemplate() (*template.Template, error) {
 	return t, nil
 }
 
-func (s *server) Start() {
+func (s *server) Start() error {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
@@ -74,7 +75,11 @@ func (s *server) Start() {
 		s.shutdown()
 	}()
 
-	s.server.ListenAndServe()
+	err := s.server.ListenAndServe()
+
+	if !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
 	start := time.Now()
 
 	s.waitForShutdown()
@@ -82,6 +87,8 @@ func (s *server) Start() {
 	end := time.Now()
 
 	fmt.Printf("Shutdown took %f\n", end.Sub(start).Seconds())
+
+	return nil
 
 }
 

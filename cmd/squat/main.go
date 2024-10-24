@@ -15,5 +15,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	s.Start()
+	if err := s.Start(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
