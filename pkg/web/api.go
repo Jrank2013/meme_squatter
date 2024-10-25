@@ -18,24 +18,27 @@ import (
 type server struct {
 	server         http.Server
 	shutdownSignal chan struct{}
-	host           string
 }
 
-func configMiddleware() gin.HandlerFunc{
+type Config struct {
+	Domains map[string]string `yaml:"domains"`
+	Server  struct {
+		Port int16 `yaml:"port"`
+	} `yaml:"server"`
+}
+
+func configMiddleware(c *Config) gin.HandlerFunc {
 
 	return func(ctx *gin.Context) {
-		ctx.Set("host", "https://memcached.org")
+		host := c.Domains[strings.Split(ctx.Request.Host, ":")[0]]
+		ctx.Set("host", host)
 		ctx.Next()
 	}
 
 }
 
-func NewServer(address string) (*server, error) {
+func NewServer(address string, config *Config) (*server, error) {
 	h := gin.New()
-	h.Use(gin.Recovery())
-	h.Use(configMiddleware())
-
-	h.StaticFS("/public", PublicAssets)
 
 	t, err := loadTemplate()
 
@@ -45,15 +48,18 @@ func NewServer(address string) (*server, error) {
 
 	h.SetHTMLTemplate(t)
 
+	h.Use(gin.Recovery())
+	h.Use(configMiddleware(config))
+	h.StaticFS("/public", PublicAssets)
+
 	h.GET("/", index)
 
 	return &server{
 		server: http.Server{
-			Addr:              address,
+			Addr:              fmt.Sprintf(":%d", config.Server.Port),
 			Handler:           h,
 			ReadHeaderTimeout: time.Second * 30,
 		},
-		host: "https://memcached.org",
 	}, nil
 }
 
