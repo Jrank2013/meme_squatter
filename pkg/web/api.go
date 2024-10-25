@@ -18,11 +18,22 @@ import (
 type server struct {
 	server         http.Server
 	shutdownSignal chan struct{}
+	host           string
+}
+
+func configMiddleware() gin.HandlerFunc{
+
+	return func(ctx *gin.Context) {
+		ctx.Set("host", "https://memcached.org")
+		ctx.Next()
+	}
+
 }
 
 func NewServer(address string) (*server, error) {
 	h := gin.New()
 	h.Use(gin.Recovery())
+	h.Use(configMiddleware())
 
 	h.StaticFS("/public", PublicAssets)
 
@@ -42,6 +53,7 @@ func NewServer(address string) (*server, error) {
 			Handler:           h,
 			ReadHeaderTimeout: time.Second * 30,
 		},
+		host: "https://memcached.org",
 	}, nil
 }
 
