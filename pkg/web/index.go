@@ -15,6 +15,6 @@ var memes = [4]string{
 
 func index(c *gin.Context) {
 	meme := memes[rand.Int()%4]
-	c.HTML(200, "index.html", gin.H{"Meme": meme})
+	c.HTML(200, "index.html", gin.H{"Meme": meme, "Redirect_url": "https://memcached.org"})
 
 }
